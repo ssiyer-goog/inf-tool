@@ -1,0 +1,543 @@
+body {
+    font-family: 'Google Sans Text', 'Roboto', 'Noto Sans', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* Light grey background */
+    color: #202124; /* Dark grey text */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: transparent;
+    padding: 0;
+    width: 100%;
+    max-width: 1300px; /* Increased max-width for two columns */
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+}
+
+header h1 {
+    color: #1a73e8; /* Google Blue */
+    margin-bottom: 0.5rem;
+    font-size: 2.5em;
+    font-weight: 500;
+}
+
+header p {
+    font-size: 1.1em;
+    color: #5f6368; /* Secondary text color */
+}
+
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr; /* Left column for config, Right for outputs */
+    gap: 24px; /* Gap between columns and rows if any */
+}
+
+.left-column, .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px; /* Gap between cards within a column */
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #dadce0; /* Material border color */
+    border-radius: 8px; /* Material border radius */
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); /* Material shadow */
+    width: 100%; /* Make cards fill their column */
+    box-sizing: border-box;
+}
+
+.estimation-summary-section.card {
+     margin-bottom: 24px; /* Space below the summary before the two columns start */
+}
+
+
+.configuration-section h2 {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.form-subsection {
+    margin-bottom: 20px;
+}
+.form-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.form-subsection h3 {
+    color: #1a73e8; /* Blue for subsection titles */
+    font-size: 1.2em;
+    margin-top: 0;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.section-divider {
+    border: 0;
+    height: 1px;
+    background-color: #dadce0;
+    margin: 30px 0;
+}
+
+.config-step-info {
+    font-size: 0.9em;
+    color: #5f6368;
+    margin-bottom: 16px;
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #e8eaed;
+}
+
+
+h2 { 
+    color: #202124;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    font-weight: 500;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 12px;
+}
+
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #5f6368;
+    font-size: 0.9em;
+}
+
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+    font-family: 'Google Sans Text', 'Roboto', 'Noto Sans', sans-serif;
+    background-color: #f8f9fa;
+    color: #202124;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="time"]:focus,
+.form-group select:focus {
+    border-color: #1a73e8;
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    background-color: #ffffff;
+}
+
+.calculate-button, .secondary-button {
+    background-color: #1a73e8;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.0em;
+    font-weight: 500;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    width: auto; 
+    min-width: 200px;
+    display: block; 
+    margin: 20px auto 10px auto;
+    text-transform: uppercase; 
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+}
+
+.calculate-button:hover, .secondary-button:hover {
+    background-color: #1765cc;
+    box-shadow: 0 3px 3px 0 rgba(0,0,0,0.14), 0 1px 7px 0 rgba(0,0,0,0.12), 0 3px 1px -1px rgba(0,0,0,0.2);
+}
+
+.calculate-button:active, .secondary-button:active {
+    background-color: #1459b3;
+    box-shadow: 0 5px 5px -3px rgba(0,0,0,0.2),0 8px 10px 1px rgba(0,0,0,0.14),0 3px 14px 2px rgba(0,0,0,0.12);
+}
+
+.calculate-button:disabled, .secondary-button:disabled {
+    background-color: #e0e0e0;
+    color: #a0a0a0;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.secondary-button {
+    background-color: #4285f4; /* Lighter blue for secondary actions */
+    margin-top: 10px;
+}
+.secondary-button:hover {
+    background-color: #3367d6;
+}
+.secondary-button:active {
+    background-color: #2a56c6;
+}
+
+
+.results-box { 
+    background-color: #e8f0fe; 
+    border: 1px solid #d2e3fc;
+    color: #174ea6; 
+    padding: 16px;
+    border-radius: 4px;
+    line-height: 1.5;
+    min-height: 60px;
+}
+.results-box p {
+    margin-bottom: 0.4rem;
+}
+.results-box p:last-child {
+    margin-bottom: 0;
+}
+.results-box strong[aria-live="assertive"] {
+    font-size: 1.5em;
+    color: #0b57d0;
+    display: block;
+    margin: 4px 0 8px 0;
+}
+
+.chart-container {
+    width: 100%;
+    padding: 0; 
+    margin-bottom: 10px;
+    min-height: 50px;
+}
+
+#diurnalChart {
+    width: 100% !important; 
+    height: 300px !important; /* Adjusted height for two-column layout */
+    display: block;
+    border-radius: 4px;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 15px;
+    margin-top: 15px;
+    padding-bottom: 5px; 
+}
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85em;
+    color: #5f6368;
+}
+.legend-color-box {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1); 
+}
+
+
+.analysis-box { 
+    padding: 0; 
+    line-height: 1.6;
+    min-height: 80px;
+}
+
+.analysis-box h4 {
+    color: #1a73e8;
+    font-size: 1.1em;
+    font-weight: 500;
+    margin-top: 12px; 
+    margin-bottom: 10px; 
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.analysis-box h4:first-child {
+    margin-top: 0;
+}
+
+
+.analysis-box ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 12px; 
+}
+.analysis-box ul:last-of-type { 
+    margin-bottom: 0;
+}
+
+
+.analysis-box li {
+    margin-bottom: 6px; 
+    font-size: 0.95em;
+    color: #3c4043;
+}
+.analysis-box li strong {
+    color: #202124;
+    font-weight: 500;
+}
+
+.cost-comparison-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; 
+    margin-bottom: 12px; 
+    padding: 12px; 
+    background-color: #f8f9fa; 
+    border-radius: 4px;
+    border: 1px solid #e8eaed;
+}
+.cost-column {
+    flex: 1;
+    text-align: center;
+}
+.cost-label {
+    font-size: 0.9em;
+    color: #5f6368;
+    margin-bottom: 4px; 
+    font-weight: 500;
+}
+.cost-value {
+    font-size: 1.3em; 
+    font-weight: 500;
+    color: #1a73e8;
+    margin-bottom: 0;
+}
+.savings-summary {
+    text-align: center;
+    font-size: 1.05em; 
+    margin-top: 12px; 
+    padding: 8px; 
+    border-radius: 4px;
+}
+
+.savings-summary strong.savings {
+    color: #1e8e3e; /* Google Green for savings */
+    font-weight: 500;
+}
+.savings-summary strong.loss {
+    color: #d93025; /* Google Red for loss */
+    font-weight: 500;
+}
+
+.error-message {
+    color: #d93025; /* Material error red */
+    font-weight: 500;
+    display: block;
+    margin-top: 5px;
+}
+
+.placeholder-text {
+    color: #5f6368;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+
+
+.disclaimer.card {
+    font-size: 0.85em;
+    color: #5f6368;
+    background-color: #f1f3f4; 
+    text-align: left;
+    border: 1px solid #e8eaed;
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #dadce0;
+    font-size: 0.9em;
+    color: #5f6368;
+}
+
+/* Booking Tool Specific Styles */
+#bookingToolSection {
+    margin-top: 24px; /* Ensure it's below the main grid */
+}
+
+#bookingToolSection h2 {
+    text-align: left;
+    font-size: 1.3em; /* Slightly smaller than main section headers */
+    color: #1a73e8;
+}
+
+#bookingToolSection .booking-summary {
+    background-color: #e8f0fe;
+    border: 1px solid #d2e3fc;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+#bookingToolSection .booking-summary p {
+    font-size: 1em;
+    margin-bottom: 8px;
+    color: #174ea6;
+}
+#bookingToolSection .booking-summary strong {
+    color: #0b57d0;
+    font-weight: 500;
+}
+
+#bookingToolSection .form-group { 
+    margin-bottom: 18px;
+}
+
+.reservation-duration-display {
+    font-size: 0.95em;
+    color: #3c4043;
+    margin: -10px 0 15px 0; /* Position after date inputs */
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.recommendation-note {
+    font-size: 0.85em;
+    color: #5f6368;
+    margin: -10px 0 15px 5px;
+}
+
+.fallback-timeline-container {
+    width: 100%;
+    height: 25px;
+    background-color: #e0e0e0; /* Light grey background for the timeline */
+    border-radius: 4px;
+    position: relative;
+    margin-top: 5px;
+    overflow: hidden; /* Ensure highlight doesn't spill */
+}
+
+.fallback-timeline-highlight {
+    position: absolute;
+    height: 100%;
+    background-color: #4285f4; /* Blue for the highlighted fallback window */
+    border-radius: 4px; /* Match container's radius for smooth edges */
+    left: 0%; /* Default, will be updated by JS */
+    width: 0%; /* Default, will be updated by JS */
+    transition: left 0.3s ease, width 0.3s ease; /* Smooth transition for changes */
+}
+
+
+#bookingToolSection .info-text {
+    font-size: 0.9em;
+    color: #5f6368;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f1f3f4; /* Slightly different background for info */
+    border: 1px solid #e8eaed;
+    border-radius: 4px;
+}
+
+#bookingConfirmationMessage {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 6px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+#bookingConfirmationMessage ul {
+    list-style-position: inside;
+    padding-left: 5px;
+    margin-top: 8px;
+}
+#bookingConfirmationMessage li {
+    margin-bottom: 5px;
+}
+
+#bookingConfirmationMessage.success {
+    background-color: #e6f4ea; /* Light green for success */
+    border: 1px solid #b7e1c7;
+    color: #185c37;
+}
+#bookingConfirmationMessage.error {
+    background-color: #fce8e6; /* Light red for error */
+    border: 1px solid #f7c5c0;
+    color: #c5221f;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1024px) { /* Tablet and smaller */
+    .main-content-grid {
+        grid-template-columns: 1fr; /* Stack columns */
+    }
+    .container {
+        max-width: 900px; /* Adjust max-width for single column on smaller screens */
+    }
+    #diurnalChart {
+        height: 320px !important; /* Restore height for single column view */
+    }
+}
+
+
+@media (max-width: 767px) { 
+     header h1 {
+        font-size: 2em;
+    }
+    header p {
+        font-size: 1em;
+    }
+     .cost-comparison-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .cost-column {
+        padding-bottom: 10px;
+    }
+    .cost-column:not(:last-child) {
+        border-bottom: 1px solid #e8eaed;
+    }
+}
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 0px;
+        max-width: 100%; /* Allow full width on very small screens */
+    }
+     .card {
+        padding: 16px;
+    }
+    header h1 {
+        font-size: 1.8em;
+    }
+    h2 {
+        font-size: 1.2em;
+    }
+    .calculate-button, .secondary-button {
+        font-size: 1em;
+        padding: 10px 18px;
+    }
+    .chart-legend {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
