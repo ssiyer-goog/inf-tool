@@ -1,5 +1,6 @@
 {
   "name": "LLM GPU Estimator + Fallback on-demand booking tool",
   "description": "A tool to estimate H100 GPU requirements for serving open-source LLMs based on user traffic and display diurnal usage.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "prompt": ""
 }
