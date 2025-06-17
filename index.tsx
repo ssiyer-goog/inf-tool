@@ -19,7 +19,7 @@ interface DiurnalPatternOption {
 interface HourlyBreakdown {
     totalDemand: number;
     reserved: number;
-    fallback: number;
+    inferenceSurge: number;
     flexSpot: number;
 }
 
@@ -29,7 +29,7 @@ interface InitialEstimationResults {
     modelName: string;
 }
 
-interface RecommendedFallbackWindow {
+interface RecommendedInferenceSurgeWindow {
     startHour: number;
     endHour: number;
 }
@@ -92,13 +92,13 @@ const diurnalPatternsOptions: DiurnalPatternOption[] = [
 
 const DEFAULT_RESERVED_GPUS = 20;
 const DEFAULT_PRICE_RESERVED = 2.50;
-const DEFAULT_PRICE_FALLBACK = 3.00;
+const DEFAULT_PRICE_INFERENCESURGE = 3.00;
 const DEFAULT_PRICE_FLEXSPOT = 3.50;
 
 const CHART_COLORS = {
     totalDemand: 'rgba(26, 115, 232, 1)', 
     reserved: 'rgba(52, 168, 83, 0.7)',
-    fallback: 'rgba(251, 188, 5, 0.7)',
+    inferenceSurge: 'rgba(251, 188, 5, 0.7)',
     flexSpot: 'rgba(234, 67, 53, 0.7)',
     grid: '#dadce0',
     text: '#5f6368'
@@ -106,7 +106,7 @@ const CHART_COLORS = {
 
 let currentPeakEstimation: InitialEstimationResults | null = null;
 let peakDemandCalculatedSuccessfully = false;
-let lastRecommendedFallbackWindow: RecommendedFallbackWindow | null = null;
+let lastRecommendedInferenceSurgeWindow: RecommendedInferenceSurgeWindow | null = null;
 let lastCalculatedSavingsPer24h: number | null = null;
 let lastCalculatedMixedModelCostPer24h: number | null = null;
 
@@ -157,7 +157,7 @@ function calculateInitialGPUNeeds(
 }
 
 function calculateConsumptionBreakdown(hourlyGpuDemand: number[], reservedGpus: number): HourlyBreakdown[] {
-    const fallbackOnDemandCapacity = reservedGpus * 0.5; 
+    const inferenceSurgeCapacity = reservedGpus * 0.5; 
 
     return hourlyGpuDemand.map(demand => {
         let currentDemand = demand;
@@ -165,21 +165,21 @@ function calculateConsumptionBreakdown(hourlyGpuDemand: number[], reservedGpus: 
         const gpusFromReservation = Math.min(currentDemand, reservedGpus);
         currentDemand -= gpusFromReservation;
 
-        const gpusFromFallback = Math.min(currentDemand, fallbackOnDemandCapacity);
-        currentDemand -= gpusFromFallback;
+        const gpusFromInferenceSurge = Math.min(currentDemand, inferenceSurgeCapacity);
+        currentDemand -= gpusFromInferenceSurge;
 
         const gpusFromFlexSpot = currentDemand;
 
         return {
             totalDemand: demand,
             reserved: gpusFromReservation,
-            fallback: gpusFromFallback,
+            inferenceSurge: gpusFromInferenceSurge,
             flexSpot: gpusFromFlexSpot,
         };
     });
 }
 
-function calculateRecommendedFallbackWindow(hourlyGpuDemand: number[], reservedGpus: number): RecommendedFallbackWindow {
+function calculateRecommendedInferenceSurgeWindow(hourlyGpuDemand: number[], reservedGpus: number): RecommendedInferenceSurgeWindow {
     let firstOverrunHour = -1;
     let lastOverrunHour = -1;
 
@@ -233,7 +233,7 @@ function displayAnalysis(
     hourlyBreakdowns: HourlyBreakdown[] | null,
     reservedGpusConfig: number,
     peakTotalDemand: number | null,
-    prices: { reserved: number; fallback: number; flexSpot: number } | null,
+    prices: { reserved: number; inferenceSurge: number; flexSpot: number } | null,
     error?: string
 ): void {
     const analysisDisplay = document.getElementById('analysisDisplay');
@@ -260,12 +260,12 @@ function displayAnalysis(
     }
 
     let totalReservedUsed = 0;
-    let totalFallbackUsed = 0;
+    let totalInferenceSurgeUsed = 0;
     let totalFlexSpotUsed = 0;
 
     hourlyBreakdowns.forEach(hour => {
         totalReservedUsed += hour.reserved;
-        totalFallbackUsed += hour.fallback;
+        totalInferenceSurgeUsed += hour.inferenceSurge;
         totalFlexSpotUsed += hour.flexSpot;
     });
 
@@ -274,10 +274,10 @@ function displayAnalysis(
 
     const costAllReservedPeak = peakTotalDemand * 24 * prices.reserved;
     const costMixedModel = (totalReservedPaidHours * prices.reserved) +
-                           (totalFallbackUsed * prices.fallback) +
+                           (totalInferenceSurgeUsed * prices.inferenceSurge) +
                            (totalFlexSpotUsed * prices.flexSpot);
     const savings = costAllReservedPeak - costMixedModel;
-    const anyPriceSet = prices.reserved > 0 || prices.fallback > 0 || prices.flexSpot > 0;
+    const anyPriceSet = prices.reserved > 0 || prices.inferenceSurge > 0 || prices.flexSpot > 0;
 
     if (anyPriceSet) {
         lastCalculatedSavingsPer24h = savings;
@@ -292,7 +292,7 @@ function displayAnalysis(
         <ul>
             <li>Reserved GPUs (Utilized): <strong aria-label="Reserved GPUs Utilized">${totalReservedUsed.toLocaleString()} GPU-hours</strong></li>
             <li>Reserved GPUs (Idle): <strong aria-label="Reserved GPUs Idle">${totalIdleReservedHours.toLocaleString()} GPU-hours</strong></li>
-            <li>Fallback On-Demand GPUs (Utilized): <strong aria-label="Fallback On-Demand GPUs Utilized">${totalFallbackUsed.toLocaleString()} GPU-hours</strong></li>
+            <li>Inference Surge GPUs (Utilized): <strong aria-label="Inference Surge GPUs Utilized">${totalInferenceSurgeUsed.toLocaleString()} GPU-hours</strong></li>
             <li>Flex-start GPUs (Utilized): <strong aria-label="Flex-start GPUs Utilized">${totalFlexSpotUsed.toLocaleString()} GPU-hours</strong></li>
         </ul>
         <h4>Cost Comparison (24h Estimate):</h4>
@@ -302,7 +302,7 @@ function displayAnalysis(
                 <p class="cost-value">${anyPriceSet && prices.reserved > 0 ? '$' + costAllReservedPeak.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}</p>
             </div>
             <div class="cost-column">
-                <p class="cost-label">Scenario 2: Reservation + Fallback + Flex-start</p>
+                <p class="cost-label">Scenario 2: Reservation + Inference Surge + Flex-start</p>
                 <p class="cost-value">${anyPriceSet ? '$' + costMixedModel.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}</p>
             </div>
         </div>
@@ -320,7 +320,7 @@ function displayAnalysis(
         proceedButton.id = 'proceedToBookingButton';
         proceedButton.className = 'cta-button secondary-button calculate-button';
         proceedButton.textContent = 'Proceed to Book Capacity';
-        proceedButton.addEventListener('click', () => displayBookingTool(lastRecommendedFallbackWindow));
+        proceedButton.addEventListener('click', () => displayBookingTool(lastRecommendedInferenceSurgeWindow));
         costAnalysisParentCard.appendChild(proceedButton);
     }
 }
@@ -450,13 +450,13 @@ function drawDiurnalChart(
         };
 
         const reservedHourly = hourlyBreakdowns.map(h => h.reserved);
-        const fallbackHourly = hourlyBreakdowns.map(h => h.fallback);
+        const inferenceSurgeHourly = hourlyBreakdowns.map(h => h.inferenceSurge);
         const flexSpotHourly = hourlyBreakdowns.map(h => h.flexSpot);
-        const reservedAndFallbackHourly = reservedHourly.map((r, i) => r + fallbackHourly[i]);
+        const reservedAndInferenceSurgeHourly = reservedHourly.map((r, i) => r + inferenceSurgeHourly[i]);
 
         drawArea(reservedHourly, CHART_COLORS.reserved);
-        drawArea(fallbackHourly, CHART_COLORS.fallback, reservedHourly);
-        drawArea(flexSpotHourly, CHART_COLORS.flexSpot, reservedAndFallbackHourly);
+        drawArea(inferenceSurgeHourly, CHART_COLORS.inferenceSurge, reservedHourly);
+        drawArea(flexSpotHourly, CHART_COLORS.flexSpot, reservedAndInferenceSurgeHourly);
     }
     
     if (totalDemandHourlyData.length > 0) {
@@ -473,7 +473,7 @@ function drawDiurnalChart(
     const legendItemsConfig = [
         { label: 'Total Demand', color: CHART_COLORS.totalDemand, isLine: true },
         { label: 'Reserved', color: CHART_COLORS.reserved },
-        { label: 'Fallback On-Demand', color: CHART_COLORS.fallback },
+        { label: 'Inference Surge', color: CHART_COLORS.inferenceSurge },
         { label: 'Flex-start', color: CHART_COLORS.flexSpot },
     ];
     
@@ -573,7 +573,7 @@ function handleCapacityCostAnalysis(): void {
 
     let reservedGpus = parseInt((form.elements.namedItem('reservedGpus') as HTMLInputElement).value, 10);
     const priceReserved = parseFloat((form.elements.namedItem('priceReserved') as HTMLInputElement).value);
-    const priceFallbackOnDemand = parseFloat((form.elements.namedItem('priceFallbackOnDemand') as HTMLInputElement).value);
+    const priceInferenceSurge = parseFloat((form.elements.namedItem('priceInferenceSurge') as HTMLInputElement).value);
     const priceFlexSpot = parseFloat((form.elements.namedItem('priceFlexSpot') as HTMLInputElement).value);
     
     const analysisDisplay = document.getElementById('analysisDisplay');
@@ -594,7 +594,7 @@ function handleCapacityCostAnalysis(): void {
         reservedGpus = 512;
     }
     if (isNaN(priceReserved) || priceReserved < 0) errorMessages.push("Price for Reserved GPU must be non-negative.");
-    if (isNaN(priceFallbackOnDemand) || priceFallbackOnDemand < 0) errorMessages.push("Price for Fallback On-Demand GPU must be non-negative.");
+    if (isNaN(priceInferenceSurge) || priceInferenceSurge < 0) errorMessages.push("Price for Inference Surge GPU must be non-negative.");
     if (isNaN(priceFlexSpot) || priceFlexSpot < 0) errorMessages.push("Price for Flex-start GPU must be non-negative.");
 
     if (errorMessages.length > 0) {
@@ -602,18 +602,18 @@ function handleCapacityCostAnalysis(): void {
         return;
     }
     
-    lastRecommendedFallbackWindow = calculateRecommendedFallbackWindow(currentPeakEstimation.hourlyGpuDemand, reservedGpus);
+    lastRecommendedInferenceSurgeWindow = calculateRecommendedInferenceSurgeWindow(currentPeakEstimation.hourlyGpuDemand, reservedGpus);
 
     const hourlyBreakdowns = calculateConsumptionBreakdown(currentPeakEstimation.hourlyGpuDemand, reservedGpus);
     drawDiurnalChart(hourlyBreakdowns, currentPeakEstimation.peakGpus, false); 
     displayAnalysis(hourlyBreakdowns, reservedGpus, currentPeakEstimation.peakGpus, {
         reserved: priceReserved,
-        fallback: priceFallbackOnDemand,
+        inferenceSurge: priceInferenceSurge,
         flexSpot: priceFlexSpot
     });
 }
 
-function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null) {
+function displayBookingTool(recommendedWindow: RecommendedInferenceSurgeWindow | null) {
     const bookingToolSection = document.getElementById('bookingToolSection') as HTMLDivElement;
     const form = document.getElementById('gpuForm') as HTMLFormElement;
     if (!bookingToolSection || !form || !currentPeakEstimation) return;
@@ -624,7 +624,7 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
         alert("Invalid number of reserved GPUs. Please correct it in the configuration.");
         return;
     }
-    const fallbackCapacity = reservedGpusValue * 0.5;
+    const inferenceSurgeCapacity = reservedGpusValue * 0.5;
 
     const defaultStartTime = recommendedWindow ? `${String(recommendedWindow.startHour).padStart(2, '0')}:00` : "09:00";
     const defaultEndTime = recommendedWindow ? `${String(recommendedWindow.endHour).padStart(2, '0')}:00` : "17:00";
@@ -634,7 +634,7 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
         <h2>Inference Capacity Booking</h2>
         <div class="booking-summary">
             <p>Reserved H100 GPUs: <strong>${reservedGpusValue}</strong></p>
-            <p>Daily Fallback On-Demand Capacity (50% of reserved): <strong>${fallbackCapacity.toLocaleString()} GPUs</strong></p>
+            <p>Daily Inference Surge Capacity (50% of reserved): <strong>${inferenceSurgeCapacity.toLocaleString()} GPUs</strong></p>
         </div>
 
         <div class="form-group">
@@ -649,23 +649,23 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
 
 
         <div class="form-group">
-            <label for="fallbackStartTime">Daily Fallback Start Time:</label>
-            <input type="time" id="fallbackStartTime" name="fallbackStartTime" value="${defaultStartTime}" required>
+            <label for="inferenceSurgeStartTime">Daily Inference Surge Start Time:</label>
+            <input type="time" id="inferenceSurgeStartTime" name="inferenceSurgeStartTime" value="${defaultStartTime}" required>
         </div>
         <div class="form-group">
-            <label for="fallbackEndTime">Daily Fallback End Time:</label>
-            <input type="time" id="fallbackEndTime" name="fallbackEndTime" value="${defaultEndTime}" required>
+            <label for="inferenceSurgeEndTime">Daily Inference Surge End Time:</label>
+            <input type="time" id="inferenceSurgeEndTime" name="inferenceSurgeEndTime" value="${defaultEndTime}" required>
         </div>
-        <p class="recommendation-note">Recommended fallback window: ${defaultStartTime} - ${defaultEndTime}. You can adjust this.</p>
+        <p class="recommendation-note">Recommended inference surge window: ${defaultStartTime} - ${defaultEndTime}. You can adjust this.</p>
         
         <div class="form-group">
-             <label>Visual Fallback Window (24h):</label>
-            <div class="fallback-timeline-container">
-                <div id="fallbackTimelineHighlight" class="fallback-timeline-highlight"></div>
+             <label>Visual Inference Surge Window (24h):</label>
+            <div class="inference-surge-timeline-container">
+                <div id="inferenceSurgeTimelineHighlight" class="inference-surge-timeline-highlight"></div>
             </div>
         </div>
 
-        <p class="info-text">Flex-start capacity will automatically address any demand exceeding your Reserved and Fallback On-Demand capacity.</p>
+        <p class="info-text">Flex-start capacity will automatically address any demand exceeding your Reserved and Inference Surge capacity.</p>
         <button type="button" id="confirmBookingButton" class="cta-button primary-button calculate-button">Confirm Booking</button>
         <div id="bookingConfirmationMessage"></div>
     `;
@@ -674,8 +674,8 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
     const confirmBookingButton = document.getElementById('confirmBookingButton');
     const reservationStartDateInput = document.getElementById('reservationStartDate') as HTMLInputElement;
     const reservationEndDateInput = document.getElementById('reservationEndDate') as HTMLInputElement;
-    const fallbackStartTimeInput = document.getElementById('fallbackStartTime') as HTMLInputElement;
-    const fallbackEndTimeInput = document.getElementById('fallbackEndTime') as HTMLInputElement;
+    const inferenceSurgeStartTimeInput = document.getElementById('inferenceSurgeStartTime') as HTMLInputElement;
+    const inferenceSurgeEndTimeInput = document.getElementById('inferenceSurgeEndTime') as HTMLInputElement;
 
     function updateReservationDuration() {
         const startDate = reservationStartDateInput.value;
@@ -696,12 +696,12 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
         }
     }
 
-    function updateFallbackTimeline() {
-        const timelineHighlight = document.getElementById('fallbackTimelineHighlight');
+    function updateInferenceSurgeTimeline() {
+        const timelineHighlight = document.getElementById('inferenceSurgeTimelineHighlight');
         if (!timelineHighlight) return;
 
-        const startTime = fallbackStartTimeInput.value; // "HH:MM"
-        const endTime = fallbackEndTimeInput.value;   // "HH:MM"
+        const startTime = inferenceSurgeStartTimeInput.value; // "HH:MM"
+        const endTime = inferenceSurgeEndTimeInput.value;   // "HH:MM"
 
         if (startTime && endTime) {
             const startHour = parseInt(startTime.split(':')[0], 10);
@@ -717,6 +717,7 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
 
             if (totalEndMinutes <= totalStartMinutes) {
                 timelineHighlight.style.width = '0%';
+                timelineHighlight.style.left = '0%'; // Reset left on invalid range
                 return;
             }
 
@@ -727,6 +728,7 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
             timelineHighlight.style.width = `${widthPercent}%`;
         } else {
             timelineHighlight.style.width = '0%';
+            timelineHighlight.style.left = '0%'; // Reset left if inputs are missing
         }
     }
 
@@ -738,10 +740,10 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
         reservationStartDateInput.addEventListener('change', updateReservationDuration);
         reservationEndDateInput.addEventListener('change', updateReservationDuration);
     }
-    if (fallbackStartTimeInput && fallbackEndTimeInput) {
-        fallbackStartTimeInput.addEventListener('change', updateFallbackTimeline);
-        fallbackEndTimeInput.addEventListener('change', updateFallbackTimeline);
-        updateFallbackTimeline(); // Initial draw
+    if (inferenceSurgeStartTimeInput && inferenceSurgeEndTimeInput) {
+        inferenceSurgeStartTimeInput.addEventListener('change', updateInferenceSurgeTimeline);
+        inferenceSurgeEndTimeInput.addEventListener('change', updateInferenceSurgeTimeline);
+        updateInferenceSurgeTimeline(); // Initial draw
     }
     
     bookingToolSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -749,11 +751,11 @@ function displayBookingTool(recommendedWindow: RecommendedFallbackWindow | null)
 
 function handleConfirmBooking() {
     const reservedGpusValue = parseInt((document.getElementById('reservedGpus') as HTMLInputElement).value, 10);
-    const fallbackCapacity = reservedGpusValue * 0.5;
+    const inferenceSurgeCapacity = reservedGpusValue * 0.5;
     const startDate = (document.getElementById('reservationStartDate') as HTMLInputElement).value;
     const endDate = (document.getElementById('reservationEndDate') as HTMLInputElement).value;
-    const fallbackStartTime = (document.getElementById('fallbackStartTime') as HTMLInputElement).value;
-    const fallbackEndTime = (document.getElementById('fallbackEndTime') as HTMLInputElement).value;
+    const inferenceSurgeStartTime = (document.getElementById('inferenceSurgeStartTime') as HTMLInputElement).value;
+    const inferenceSurgeEndTime = (document.getElementById('inferenceSurgeEndTime') as HTMLInputElement).value;
     const confirmationMessageDiv = document.getElementById('bookingConfirmationMessage');
 
     if (!confirmationMessageDiv) return;
@@ -764,10 +766,10 @@ function handleConfirmBooking() {
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
         errors.push("Reservation End Date cannot be before Start Date.");
     }
-    if (!fallbackStartTime) errors.push("Daily Fallback Start Time is required.");
-    if (!fallbackEndTime) errors.push("Daily Fallback End Time is required.");
-    if (fallbackStartTime && fallbackEndTime && fallbackStartTime >= fallbackEndTime) {
-        errors.push("Fallback End Time must be after Start Time.");
+    if (!inferenceSurgeStartTime) errors.push("Daily Inference Surge Start Time is required.");
+    if (!inferenceSurgeEndTime) errors.push("Daily Inference Surge End Time is required.");
+    if (inferenceSurgeStartTime && inferenceSurgeEndTime && inferenceSurgeStartTime >= inferenceSurgeEndTime) {
+        errors.push("Inference Surge End Time must be after Start Time.");
     }
     
     if (errors.length > 0) {
@@ -808,7 +810,7 @@ function handleConfirmBooking() {
         <ul>
             <li>Reserved H100 GPUs: <strong>${reservedGpusValue}</strong></li>
             <li>Reservation Period: <strong>${startDate} to ${endDate}</strong> (${reservationDurationDays} day(s))</li>
-            <li>Daily Fallback On-Demand Window: <strong>${fallbackStartTime} - ${fallbackEndTime}</strong> (for ${fallbackCapacity} GPUs)</li>
+            <li>Daily Inference Surge Window: <strong>${inferenceSurgeStartTime} - ${inferenceSurgeEndTime}</strong> (for ${inferenceSurgeCapacity} GPUs)</li>
             ${totalBookingCostMessage}
             ${totalSavingsMessage}
             <li>Flex-start capacity will cover further needs.</li>
@@ -832,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (document.getElementById('avgTokensPerRequest') as HTMLInputElement).value = '2000';
         (document.getElementById('reservedGpus') as HTMLInputElement).value = String(DEFAULT_RESERVED_GPUS);
         (document.getElementById('priceReserved') as HTMLInputElement).value = String(DEFAULT_PRICE_RESERVED.toFixed(2));
-        (document.getElementById('priceFallbackOnDemand') as HTMLInputElement).value = String(DEFAULT_PRICE_FALLBACK.toFixed(2));
+        (document.getElementById('priceInferenceSurge') as HTMLInputElement).value = String(DEFAULT_PRICE_INFERENCESURGE.toFixed(2));
         (document.getElementById('priceFlexSpot') as HTMLInputElement).value = String(DEFAULT_PRICE_FLEXSPOT.toFixed(2));
         
         calculatePeakDemandButton.addEventListener('click', handlePeakDemandCalculation);
