@@ -93,13 +93,13 @@ const diurnalPatternsOptions: DiurnalPatternOption[] = [
 const DEFAULT_RESERVED_GPUS = 20;
 const DEFAULT_PRICE_RESERVED = 2.50;
 const DEFAULT_PRICE_INFERENCESURGE = 3.00;
-const DEFAULT_PRICE_FLEXSPOT = 3.50;
+const DEFAULT_PRICE_FLEXSPOT = 3.50; // Internal ID remains priceFlexSpot
 
 const CHART_COLORS = {
     totalDemand: 'rgba(26, 115, 232, 1)', 
     reserved: 'rgba(52, 168, 83, 0.7)',
     inferenceSurge: 'rgba(251, 188, 5, 0.7)',
-    flexSpot: 'rgba(234, 67, 53, 0.7)',
+    flexSpot: 'rgba(234, 67, 53, 0.7)', // Internal ID remains flexSpot
     grid: '#dadce0',
     text: '#5f6368'
 };
@@ -168,13 +168,13 @@ function calculateConsumptionBreakdown(hourlyGpuDemand: number[], reservedGpus: 
         const gpusFromInferenceSurge = Math.min(currentDemand, inferenceSurgeCapacity);
         currentDemand -= gpusFromInferenceSurge;
 
-        const gpusFromFlexSpot = currentDemand;
+        const gpusFromFlexSpot = currentDemand; // Internal variable name
 
         return {
             totalDemand: demand,
             reserved: gpusFromReservation,
             inferenceSurge: gpusFromInferenceSurge,
-            flexSpot: gpusFromFlexSpot,
+            flexSpot: gpusFromFlexSpot, // Internal field name
         };
     });
 }
@@ -261,12 +261,12 @@ function displayAnalysis(
 
     let totalReservedUsed = 0;
     let totalInferenceSurgeUsed = 0;
-    let totalFlexSpotUsed = 0;
+    let totalFlexSpotUsed = 0; // Internal variable name
 
     hourlyBreakdowns.forEach(hour => {
         totalReservedUsed += hour.reserved;
         totalInferenceSurgeUsed += hour.inferenceSurge;
-        totalFlexSpotUsed += hour.flexSpot;
+        totalFlexSpotUsed += hour.flexSpot; // Accessing internal field
     });
 
     const totalReservedPaidHours = reservedGpusConfig * 24;
@@ -275,7 +275,7 @@ function displayAnalysis(
     const costAllReservedPeak = peakTotalDemand * 24 * prices.reserved;
     const costMixedModel = (totalReservedPaidHours * prices.reserved) +
                            (totalInferenceSurgeUsed * prices.inferenceSurge) +
-                           (totalFlexSpotUsed * prices.flexSpot);
+                           (totalFlexSpotUsed * prices.flexSpot); // Using internal price key
     const savings = costAllReservedPeak - costMixedModel;
     const anyPriceSet = prices.reserved > 0 || prices.inferenceSurge > 0 || prices.flexSpot > 0;
 
@@ -293,7 +293,7 @@ function displayAnalysis(
             <li>Reserved GPUs (Utilized): <strong aria-label="Reserved GPUs Utilized">${totalReservedUsed.toLocaleString()} GPU-hours</strong></li>
             <li>Reserved GPUs (Idle): <strong aria-label="Reserved GPUs Idle">${totalIdleReservedHours.toLocaleString()} GPU-hours</strong></li>
             <li>Inference Surge GPUs (Utilized): <strong aria-label="Inference Surge GPUs Utilized">${totalInferenceSurgeUsed.toLocaleString()} GPU-hours</strong></li>
-            <li>Flex-start GPUs (Utilized): <strong aria-label="Flex-start GPUs Utilized">${totalFlexSpotUsed.toLocaleString()} GPU-hours</strong></li>
+            <li>Regular Flex-start GPUs (Utilized): <strong aria-label="Regular Flex-start GPUs Utilized">${totalFlexSpotUsed.toLocaleString()} GPU-hours</strong></li>
         </ul>
         <h4>Cost Comparison (24h Estimate):</h4>
         <div class="cost-comparison-container">
@@ -302,7 +302,7 @@ function displayAnalysis(
                 <p class="cost-value">${anyPriceSet && prices.reserved > 0 ? '$' + costAllReservedPeak.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}</p>
             </div>
             <div class="cost-column">
-                <p class="cost-label">Scenario 2: Reservation + Inference Surge + Flex-start</p>
+                <p class="cost-label">Scenario 2: Reservation + Inference Surge + Regular Flex-start</p>
                 <p class="cost-value">${anyPriceSet ? '$' + costMixedModel.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}</p>
             </div>
         </div>
@@ -451,12 +451,12 @@ function drawDiurnalChart(
 
         const reservedHourly = hourlyBreakdowns.map(h => h.reserved);
         const inferenceSurgeHourly = hourlyBreakdowns.map(h => h.inferenceSurge);
-        const flexSpotHourly = hourlyBreakdowns.map(h => h.flexSpot);
+        const flexSpotHourly = hourlyBreakdowns.map(h => h.flexSpot); // Internal field
         const reservedAndInferenceSurgeHourly = reservedHourly.map((r, i) => r + inferenceSurgeHourly[i]);
 
         drawArea(reservedHourly, CHART_COLORS.reserved);
         drawArea(inferenceSurgeHourly, CHART_COLORS.inferenceSurge, reservedHourly);
-        drawArea(flexSpotHourly, CHART_COLORS.flexSpot, reservedAndInferenceSurgeHourly);
+        drawArea(flexSpotHourly, CHART_COLORS.flexSpot, reservedAndInferenceSurgeHourly); // Using internal color key
     }
     
     if (totalDemandHourlyData.length > 0) {
@@ -474,7 +474,7 @@ function drawDiurnalChart(
         { label: 'Total Demand', color: CHART_COLORS.totalDemand, isLine: true },
         { label: 'Reserved', color: CHART_COLORS.reserved },
         { label: 'Inference Surge', color: CHART_COLORS.inferenceSurge },
-        { label: 'Flex-start', color: CHART_COLORS.flexSpot },
+        { label: 'Regular Flex-start', color: CHART_COLORS.flexSpot }, // Updated Legend Label
     ];
     
     const itemsToShowInLegend = showOnlyTotalDemandLine ? [legendItemsConfig[0]] : legendItemsConfig;
@@ -574,7 +574,7 @@ function handleCapacityCostAnalysis(): void {
     let reservedGpus = parseInt((form.elements.namedItem('reservedGpus') as HTMLInputElement).value, 10);
     const priceReserved = parseFloat((form.elements.namedItem('priceReserved') as HTMLInputElement).value);
     const priceInferenceSurge = parseFloat((form.elements.namedItem('priceInferenceSurge') as HTMLInputElement).value);
-    const priceFlexSpot = parseFloat((form.elements.namedItem('priceFlexSpot') as HTMLInputElement).value);
+    const priceFlexSpot = parseFloat((form.elements.namedItem('priceFlexSpot') as HTMLInputElement).value); // Internal variable name
     
     const analysisDisplay = document.getElementById('analysisDisplay');
     if(!analysisDisplay) return;
@@ -595,7 +595,7 @@ function handleCapacityCostAnalysis(): void {
     }
     if (isNaN(priceReserved) || priceReserved < 0) errorMessages.push("Price for Reserved GPU must be non-negative.");
     if (isNaN(priceInferenceSurge) || priceInferenceSurge < 0) errorMessages.push("Price for Inference Surge GPU must be non-negative.");
-    if (isNaN(priceFlexSpot) || priceFlexSpot < 0) errorMessages.push("Price for Flex-start GPU must be non-negative.");
+    if (isNaN(priceFlexSpot) || priceFlexSpot < 0) errorMessages.push("Price for Regular Flex-start GPU must be non-negative."); // Updated error message
 
     if (errorMessages.length > 0) {
         displayAnalysis(null, 0, null, null, errorMessages.join(' '));
@@ -609,7 +609,7 @@ function handleCapacityCostAnalysis(): void {
     displayAnalysis(hourlyBreakdowns, reservedGpus, currentPeakEstimation.peakGpus, {
         reserved: priceReserved,
         inferenceSurge: priceInferenceSurge,
-        flexSpot: priceFlexSpot
+        flexSpot: priceFlexSpot // Internal key for prices object
     });
 }
 
@@ -665,7 +665,7 @@ function displayBookingTool(recommendedWindow: RecommendedInferenceSurgeWindow |
             </div>
         </div>
 
-        <p class="info-text">Flex-start capacity will automatically address any demand exceeding your Reserved and Inference Surge capacity.</p>
+        <p class="info-text">Regular Flex-start capacity will automatically address any demand exceeding your Reserved and Inference Surge capacity.</p>
         <button type="button" id="confirmBookingButton" class="cta-button primary-button calculate-button">Confirm Booking</button>
         <div id="bookingConfirmationMessage"></div>
     `;
@@ -813,7 +813,7 @@ function handleConfirmBooking() {
             <li>Daily Inference Surge Window: <strong>${inferenceSurgeStartTime} - ${inferenceSurgeEndTime}</strong> (for ${inferenceSurgeCapacity} GPUs)</li>
             ${totalBookingCostMessage}
             ${totalSavingsMessage}
-            <li>Flex-start capacity will cover further needs.</li>
+            <li>Regular Flex-start capacity will cover further needs.</li>
         </ul>
     `;
     confirmationMessageDiv.className = 'success';
@@ -835,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (document.getElementById('reservedGpus') as HTMLInputElement).value = String(DEFAULT_RESERVED_GPUS);
         (document.getElementById('priceReserved') as HTMLInputElement).value = String(DEFAULT_PRICE_RESERVED.toFixed(2));
         (document.getElementById('priceInferenceSurge') as HTMLInputElement).value = String(DEFAULT_PRICE_INFERENCESURGE.toFixed(2));
-        (document.getElementById('priceFlexSpot') as HTMLInputElement).value = String(DEFAULT_PRICE_FLEXSPOT.toFixed(2));
+        (document.getElementById('priceFlexSpot') as HTMLInputElement).value = String(DEFAULT_PRICE_FLEXSPOT.toFixed(2)); // ID remains priceFlexSpot
         
         calculatePeakDemandButton.addEventListener('click', handlePeakDemandCalculation);
         analyzeCapacityCostsButton.addEventListener('click', handleCapacityCostAnalysis);
